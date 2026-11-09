@@ -1,0 +1,274 @@
+{
+  "name": "git-selector",
+  "displayName": "Git Selector",
+  "description": "Fast switching between local git repositories and their .code-workspace files, auto-open of workspaces, and per-repo git user profiles.",
+  "version": "1.0.0",
+  "publisher": "studiomedio",
+  "license": "MIT",
+  "pricing": "Free",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/studiomedio/git-selector"
+  },
+  "bugs": {
+    "url": "https://github.com/studiomedio/git-selector/issues"
+  },
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Other",
+    "SCM Providers"
+  ],
+  "keywords": [
+    "git",
+    "project manager",
+    "projects",
+    "workspace",
+    "code-workspace",
+    "switcher",
+    "recent",
+    "git user",
+    "git config",
+    "profile"
+  ],
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#0785B8",
+    "theme": "dark"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "workspaceContains:*.code-workspace"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "gitSelector.openProject",
+        "title": "Open Project",
+        "category": "Git Selector"
+      },
+      {
+        "command": "gitSelector.openProjectNewWindow",
+        "title": "Open Project in New Window",
+        "category": "Git Selector"
+      },
+      {
+        "command": "gitSelector.refreshProjects",
+        "title": "Refresh Project List",
+        "category": "Git Selector"
+      },
+      {
+        "command": "gitSelector.addBaseFolder",
+        "title": "Add Projects Folder…",
+        "category": "Git Selector"
+      },
+      {
+        "command": "gitSelector.openWorkspaceFile",
+        "title": "Open Workspace File of Current Folder",
+        "category": "Git Selector"
+      },
+      {
+        "command": "gitSelector.switchGitUser",
+        "title": "Switch Git User",
+        "category": "Git Selector"
+      },
+      {
+        "command": "gitSelector.addGitUserProfile",
+        "title": "Add Git User Profile…",
+        "category": "Git Selector"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "gitSelector.openProject",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
+      },
+      {
+        "command": "gitSelector.openProjectNewWindow",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "Projects",
+        "properties": {
+          "gitSelector.baseFolders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "markdownDescription": "Folders scanned for git repositories and `.code-workspace` files. `~` is expanded. When not set, they are imported once from `#gitProjectManager.baseProjectsFolders#`.",
+            "order": 0
+          },
+          "gitSelector.maxDepth": {
+            "type": "integer",
+            "default": 4,
+            "minimum": 0,
+            "maximum": 10,
+            "description": "How many folder levels below each base folder are scanned.",
+            "order": 1
+          },
+          "gitSelector.ignoredFolders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "node_modules",
+              "bower_components",
+              "vendor",
+              "Pods"
+            ],
+            "description": "Folder names (or absolute paths) skipped while scanning. Hidden folders are always skipped.",
+            "order": 2
+          },
+          "gitSelector.searchInsideRepositories": {
+            "type": "boolean",
+            "default": false,
+            "description": "Keep scanning inside a repository to find nested repositories (slower).",
+            "order": 3
+          },
+          "gitSelector.openInNewWindow": {
+            "type": "boolean",
+            "default": false,
+            "description": "Open the picked project in a new window by default. The item button always does the opposite.",
+            "order": 4
+          },
+          "gitSelector.preferWorkspace": {
+            "type": "boolean",
+            "default": true,
+            "description": "List a repository's workspace file(s) before the bare folder, so Enter opens the workspace.",
+            "order": 5
+          },
+          "gitSelector.recentLimit": {
+            "type": "integer",
+            "default": 5,
+            "minimum": 0,
+            "maximum": 30,
+            "description": "Number of recently opened projects shown at the top of the list.",
+            "order": 6
+          }
+        }
+      },
+      {
+        "title": "Auto-Open Workspace",
+        "properties": {
+          "gitSelector.autoOpenWorkspace": {
+            "type": "string",
+            "enum": [
+              "ask",
+              "always",
+              "off"
+            ],
+            "enumDescriptions": [
+              "Ask whether to open the workspace file when a folder containing one is opened.",
+              "Open the workspace file automatically (asks which one when there are several).",
+              "Never offer to open workspace files."
+            ],
+            "default": "ask",
+            "description": "What to do when a bare folder containing a .code-workspace file is opened. Folders opened as 'folder' from the project picker are never redirected.",
+            "order": 10
+          },
+          "gitSelector.autoOpenWorkspaceExcludedFolders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "description": "Folders for which auto-open is disabled ('Never for This Folder' adds entries here).",
+            "order": 11
+          }
+        }
+      },
+      {
+        "title": "Git User",
+        "properties": {
+          "gitSelector.gitUser.profiles": {
+            "type": "array",
+            "default": [],
+            "markdownDescription": "Git identities to switch between. Add `paths` to apply a profile automatically to every repository under those folders.",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "name",
+                "email"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "description": "Short name shown in the status bar, e.g. 'Work'."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "git user.name"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "git user.email"
+                },
+                "signingKey": {
+                  "type": "string",
+                  "description": "Optional git user.signingkey."
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Repositories under these folders get this profile automatically (most specific path wins)."
+                }
+              }
+            },
+            "order": 20
+          },
+          "gitSelector.gitUser.autoApply": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically write the matching profile (by 'paths') into the repository's local git config when it is opened.",
+            "order": 21
+          },
+          "gitSelector.gitUser.showStatusBar": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show the current repository's git user in the status bar.",
+            "order": 22
+          }
+        }
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "gitSelector.openWorkspaceFile",
+          "when": "workbenchState == folder"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "watch": "node esbuild.js --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node esbuild.js --test && node --test \"out-test/*.test.js\"",
+    "test:integration": "node esbuild.js && node esbuild.js --integration && node test/integration/run.js",
+    "format": "prettier --write src test esbuild.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/vscode": "~1.97.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.25.12",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3"
+  }
+}
