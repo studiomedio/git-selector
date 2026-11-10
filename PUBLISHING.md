@@ -1,30 +1,66 @@
 # Publishing
 
-The extension is published manually through the Marketplace web UI, same as the other
-`studiomedio` extensions — no Personal Access Token, no CI.
+Releases are published from GitHub Actions ([.github/workflows/publish.yml](.github/workflows/publish.yml))
+with Marketplace **Trusted Publishing** (OIDC). There is no Personal Access Token and no repository
+secret: the Marketplace accepts the workflow's short-lived GitHub token because it matches the
+publisher's policy.
+
+## One-time setup
+
+At <https://marketplace.visualstudio.com/manage/publishers/studiomedio> → **Trusted Publishing**, the
+policy must say:
+
+| Field | Value |
+|---|---|
+| Repository owner | `studiomedio` |
+| Repository | `git-selector` |
+| Workflow | `publish.yml` |
+| Environment | empty (the workflow uses no GitHub environment) |
+
+If you add an environment to the policy, add the same `environment:` to the `publish` job.
+
+## First release
+
+Git Selector is not on the Marketplace yet. If the first `--oidc` publish is rejected because the
+extension does not exist, upload `git-selector-1.0.0.vsix` once by hand (see **Manual fallback**,
+**New extension → Visual Studio Code**); later versions go through the workflow.
 
 ## Release a new version
 
 1. Bump `version` in `package.json` and add a matching entry to `CHANGELOG.md`.
-2. Run the checks and build the package:
+2. Run the checks locally (CI runs only typecheck and unit tests):
 
    ```bash
    npm run typecheck && npm test && npm run test:integration
-   npm run package          # -> git-selector-<version>.vsix
    ```
 
-3. Upload the `.vsix` at <https://marketplace.visualstudio.com/manage/publishers/studiomedio>:
-   - **New** extension: **New extension → Visual Studio Code**, drop the `.vsix`.
-   - **Update**: open the extension → **…** → **Update**, drop the new `.vsix`.
-4. (Optional) Draft a GitHub Release tagged `vX.Y.Z` and attach the `.vsix`.
+3. Commit, then tag and push:
 
-The listing goes live at `https://marketplace.visualstudio.com/items?itemName=studiomedio.git-selector`.
+   ```bash
+   git tag vX.Y.Z
+   git push origin master vX.Y.Z
+   ```
+
+   The tag must match `package.json` (`v` + version), otherwise the workflow stops before publishing.
+   To publish without a new tag, use **Actions → Publish → Run workflow** on `master`.
+
+4. (Optional) Draft a GitHub Release for the tag and attach the `.vsix` from the workflow run's
+   artifacts.
+
+The listing goes live at `https://marketplace.visualstudio.com/items?itemName=studiomedio.git-selector`
+after the Marketplace's review (a few minutes). Publishing a version that already exists on the
+Marketplace fails; bump the version.
 
 ## Pre-flight checklist
 
 - [ ] `npm run typecheck`, `npm test` and `npm run test:integration` pass.
 - [ ] `version` bumped and `CHANGELOG.md` updated.
 - [ ] `npx vsce ls` lists only `dist/extension.js`, `images/icon.png`, README, CHANGELOG, LICENSE and `package.json`.
+
+## Manual fallback
+
+`npm run package` builds `git-selector-<version>.vsix`, which can be uploaded on the publisher page:
+open the extension → **…** → **Update** (or **New extension → Visual Studio Code** for a new one).
 
 ## Testing the package locally
 
